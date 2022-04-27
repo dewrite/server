@@ -1,0 +1,24 @@
+
+module.exports = app => {
+  const mongoose = app.mongoose
+  
+  const {{ properCase name }}Schema = new mongoose.Schema({
+    name: { type: String, unique: true, required: true },
+    access: { type: String, required: true, default: 'user' },
+    pass: { type: Boolean, default: false }
+  }, { timestamps: true })
+
+  // {{ properCase name }}Schema.index({ name: 1, pass: 1 });
+  
+  // {{ properCase name }}Schema.pre('save', async function (next) {
+  //   const ctx = app.createAnonymousContext()
+  //   this.secret = ctx.helper.randomString(12)
+  //   next()
+  // })
+
+  {{ properCase name }}Schema.methods.toString = function () {
+    return this.name 
+  }
+
+  return mongoose.model('{{ properCase name }}', {{ properCase name }}Schema)
+}

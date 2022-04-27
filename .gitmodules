@@ -1,0 +1,3 @@
+[submodule "plop-templates"]
+	path = plop-templates
+	url = git@github.com:romejiang/plop-templates.git

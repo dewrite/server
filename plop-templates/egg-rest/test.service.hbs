@@ -1,0 +1,35 @@
+/* eslint-disable no-undef */
+'use strict'
+
+const { app, assert } = require('egg-mock/bootstrap')
+const wait = ms => new Promise(resolve => setTimeout(resolve, ms))
+
+describe('test/app/service/{{ name }}.test.js', () => {
+
+  let id = ''
+
+  it('should get exists user', async () => {
+    // 创建 ctx
+    const ctx = app.mockContext()
+    const payload = { name: 'test' + new Date().getTime(), access: 'service' }
+    const {{ name }} = await ctx.service.{{ name }}.create(payload)
+    assert({{ name }})
+    assert({{ name }}.access === 'service')
+    id = {{ name }}._id
+    // console.log({{ name }})
+    await wait(2 * 1000)
+  })
+
+  it('should get null when user not exists', async () => {
+    
+
+    const ctx = app.mockContext()
+    // console.log(id)
+    const {{ name }} = await ctx.service.{{ name }}.destroy(id)
+    // console.log({{ name }})
+    assert({{ name }})
+    assert({{ name }}.access === 'service')
+
+  })
+
+})

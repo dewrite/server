@@ -1,0 +1,94 @@
+
+const Service = require('egg').Service
+
+class {{ properCase name }}Service extends Service {
+  // create===============================================>
+  async create(payload) {
+    return this.ctx.model.{{ properCase name }}.create(payload)
+  }
+
+  // destroy===============================================>  
+  async destroy(_id) {
+    const { ctx } = this
+    const {{ name }} = await ctx.service.{{ name }}.find(_id)
+    if (!{{ name }}) {
+      ctx.throw(404, '{{ name }} not found')
+    }
+    return ctx.model.{{ properCase name }}.findByIdAndRemove(_id)
+  }
+
+  // update===============================================>
+  async update(_id, payload) {
+    const { ctx } = this
+    const {{ name }} = await ctx.service.{{ name }}.find(_id)
+    if (!{{ name }}) {
+      ctx.throw(404, '{{ name }} not found')
+    }
+    return ctx.model.{{ properCase name }}.findByIdAndUpdate(_id, payload)
+  }
+
+  // show===============================================>
+  async show(_id) {
+    const {{ name }} = await this.ctx.service.{{ name }}.find(_id)
+    if (!{{ name }}) {
+      this.ctx.throw(404, '{{ name }} not found')
+    }
+    return this.ctx.model.{{ properCase name }}.findById(_id)
+  }
+
+  // index===============================================>
+  async index(payload, id = undefined) {
+    let { currentPage, pageSize, search } = payload
+
+    // 分页
+    pageSize = Number(pageSize || 10)
+    currentPage = Number(currentPage || 1)
+    const skip = (currentPage - 1) * pageSize
+
+    // 排序
+    const sort = { createdAt: -1 }
+
+    // 对象映射
+    // let populate = ['blockchain', 'block']
+    // .populate(populate)
+
+    // 查询参数
+    let querys = {}
+    if (search) {
+      querys.name = { $regex: search }
+    }
+    if (id){
+      querys.user = id
+    }
+
+    const res = await this.ctx.model.{{ properCase name }}.find(querys).skip(skip).limit(pageSize).sort(sort).exec()
+    const count = await this.ctx.model.{{ properCase name }}.countDocuments(querys).exec()
+
+    // 整理数据源 -> Ant Design Pro
+    const list = res.map((e, i) => {
+      const jsonObject = Object.assign({}, e._doc)
+      jsonObject.index = i
+      jsonObject.createdAt = e.createdAt.getTime()
+      return jsonObject
+    })
+
+    return { count, list, pageSize, currentPage }
+  }
+
+  // removes===============================================>
+  async removes(values) {
+    if (values.length > 0) {
+      return this.ctx.model.{{ properCase name }}.deleteMany({ _id: { $in: values } })
+    }else{
+      return this.ctx.model.{{ properCase name }}.deleteMany({})
+    }
+  }
+
+  // Commons===============================================>
+  async find(id) {
+    return this.ctx.model.{{ properCase name }}.findById(id)
+  }
+
+}
+
+module.exports = {{ properCase name }}Service

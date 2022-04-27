@@ -1,0 +1,6 @@
+{
+	"required": "必须有字段",
+	"missing_field": "缺少字段",
+	"should match %s": "should match %s",
+	"invalid": "invalid"
+}

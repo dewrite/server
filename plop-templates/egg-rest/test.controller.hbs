@@ -1,0 +1,87 @@
+/* eslint-disable no-undef */
+'use strict'
+
+const { app, assert } = require('egg-mock/bootstrap')
+const wait = ms => new Promise(resolve => setTimeout(resolve, ms))
+
+describe('test/app/controller/{{ name }}.test.js', () => {
+
+  let id = ''
+
+  before(async () => {
+    const res = await app.httpRequest()
+      .delete('/api/{{ name }}')
+      .expect(200)
+
+    // console.log(res.body)
+  })
+
+  it('测试 {{ name }} 添加', async () => {
+    app.mockCsrf()
+    const res = await app.httpRequest()
+      .post('/api/{{ name }}/')
+      .type('form')
+      .send({
+        name: 'test' + new Date().getTime(),
+        access: 'test',
+      })
+      .expect(200, /请求成功/)
+    const body = res.body
+    assert(body.code === 0)
+    id = body.data._id
+    await wait(2 * 1000)
+  })
+
+  it('测试 {{ name }} 修改', async () => {
+    app.mockCsrf()
+
+    return app.httpRequest()
+      .put('/api/{{ name }}/' + id)
+      .send({
+        name: 'update' + new Date().getTime(),
+        access: 'update',
+      })
+      .expect(200)
+      .expect(/请求成功/)
+
+  })
+
+  it('测试 {{ name }} 获得', async () => {
+    app.mockCsrf()
+
+    const res = await app.httpRequest()
+      .get('/api/{{ name }}/' + id)
+      .expect(200)
+
+    const body = res.body
+    // console.log(body)
+    assert(res.status === 200)
+    assert(body.data._id === id)
+  })
+
+  it('测试 {{ name }} 列表', async () => {
+    app.mockCsrf()
+
+    const res = await app.httpRequest()
+      .get('/api/{{ name }}')
+      .expect(200)
+
+    const body = res.body
+    // console.log(body)
+    assert(res.status === 200)
+    assert(body.data.list.length === 1)
+    assert(body.data.list[0].access === 'update')
+  })
+
+
+  it('测试 {{ name }} 删除', () => {
+    app.mockCsrf()
+
+    return app.httpRequest()
+      .delete('/api/{{ name }}/' + id)
+      .expect(200)
+      .expect(/请求成功/)
+
+  })
+
+})

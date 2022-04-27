@@ -1,0 +1,111 @@
+import request from '@/utils/request'
+// ====================================
+// ====================================
+//  {{ properCase name }} api
+// ====================================
+// ====================================
+/**
+ * 获取对象列表
+ */
+export function list(params) {
+  return request({
+    url: '/{{ name }}',
+    method: 'get',
+    params
+  })
+}
+
+/**
+ * 获取登录用户的列表，通过JWT token
+ */
+export function mine(params) {
+  return request({
+    url: '/{{ name }}/mine',
+    method: 'get',
+    params
+  })
+}
+
+/**
+ * 通过ID获取对象
+ */
+export function get(id) {
+  return request({
+    url: `/{{ name }}/${id}`,
+    method: 'get'
+  })
+}
+
+/**
+ * 新增前查询
+ */
+export function newly(id) {
+  return request({
+    url: '/{{ name }}/new',
+    method: 'get'
+  })
+}
+
+/**
+ * 添加对象
+ */
+export function create(data) {
+  return request({
+    url: '/{{ name }}',
+    method: 'post',
+    data
+  })
+}
+
+/**
+ * 编辑前查询
+ */
+export function edit(id) {
+  return request({
+    url: `/{{ name }}/${id}/edit`,
+    method: 'get'
+  })
+}
+
+/**
+ * 更新对象
+ */
+export function update(id, data) {
+  return request({
+    url: `/{{ name }}/${id}`,
+    method: 'put',
+    data
+  })
+}
+
+/**
+ * 删除对象
+ */
+export function remove(id) {
+  return request({
+    url: `/{{ name }}/${id}`,
+    method: 'delete'
+  })
+}
+
+/**
+ * 删除对象
+ */
+export function pass(id) {
+  return request({
+    url: `/{{ name }}/pass/${id}`,
+    method: 'post'
+  })
+}
+
+export default {
+  list,
+  mine,
+  get,
+  newly,
+  create,
+  edit,
+  update,
+  pass,
+  remove
+}

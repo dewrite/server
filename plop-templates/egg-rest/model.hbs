@@ -1,0 +1,18 @@
+
+module.exports = app => {
+  const mongoose = app.mongoose
+  
+  const {{ properCase name }}Schema = new mongoose.Schema({
+    name: { type: String, unique: true, required: true },
+    password: { type: String, required: true, default: 'password' },
+    use: { type: Boolean },
+    age: { type: Number },
+    parent: { type: mongoose.Schema.Types.ObjectId, ref: '{{ properCase name }}' }
+  }, { timestamps: true })
+
+  {{ properCase name }}Schema.methods.toString = function () {
+    return this.name 
+  }
+
+  return mongoose.model('{{ properCase name }}', {{ properCase name }}Schema)
+}

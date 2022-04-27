@@ -1,0 +1,442 @@
+<template>
+  <div class="app-container">
+    <!-- 功能按钮栏 -->
+    <div class="filter-container">
+      <el-input
+        v-model="listQuery.search"
+        placeholder="权限名"
+        style="width: 200px;"
+        class="filter-item"
+        @keyup.enter.native="handleFilter"
+      />
+      {{#if advanced}}
+      <el-select
+        v-model="listQuery.importance"
+        placeholder="难度"
+        clearable
+        style="width: 90px"
+        class="filter-item"
+      >
+        <el-option
+          v-for="item in importanceOptions"
+          :key="item"
+          :label="item"
+          :value="item"
+        />
+      </el-select>
+      <el-select
+        v-model="listQuery.listType"
+        placeholder="国家"
+        clearable
+        class="filter-item"
+        style="width: 130px"
+      >
+        <el-option
+          v-for="item in calendarTypeOptions"
+          :key="item.key"
+          :label="item.display_name+'('+item.key+')'"
+          :value="item.key"
+        />
+      </el-select>
+
+      <el-checkbox
+        v-model="showReviewer"
+        class="filter-item"
+        @change="tableKey=tableKey+1"
+      >
+        显示ID
+      </el-checkbox>
+      {{/if}}
+
+      <el-button
+        class="filter-item"
+        type="primary"
+        icon="el-icon-search"
+        @click="handleFilter"
+      >
+        搜索
+      </el-button>
+
+      <el-button
+        class="filter-item"
+        style="margin-left: 10px;"
+        type="primary"
+        icon="el-icon-plus"
+        @click="handleCreate"
+      >
+        新增
+      </el-button>
+    </div>
+    <!-- 数据列表 -->
+    <el-table
+      :key="tableKey"
+      v-loading="listLoading"
+      :data="list"
+      border
+      stripe
+      fit
+      highlight-current-row
+      style="width: 100%;"
+    >
+    {{#if advanced}}
+      <el-table-column
+        v-if="showReviewer"
+        label="ID"
+        width="180px"
+        align="center"
+      >
+        <template slot-scope="scope">
+          <span>\{{ scope.row._id }}</span>
+        </template>
+      </el-table-column>
+      {{/if}}
+      <el-table-column
+        label="权限名"
+        min-width="150px"
+      >
+        <template slot-scope="{row}">
+          <span
+            class="link-type"
+            @click="handleUpdate(row)"
+          >\{{ row.name }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column prop="access" label="权限" width="150" />
+      <el-table-column
+        label="状态"
+        width="110px"
+        align="center"
+      >
+        <template slot-scope="scope">
+          <el-tag :type="scope.row.pass | statusFilter" @click="handlePass(scope.row)">
+            \{{ scope.row.pass ? '开启' : '关闭' }}
+          </el-tag>
+        </template>
+      </el-table-column>
+
+      <el-table-column
+        label="更新时间"
+        width="160px"
+        align="center"
+      >
+        <template slot-scope="scope">
+          <span>\{{ scope.row.updatedAt | parseTime("{y}-{m}-{d} {h}:{i}") }}</span>
+        </template>
+      </el-table-column>
+
+      <el-table-column
+        label="操作区"
+        fixed="right"
+        align="center"
+        width="180"
+        class-name="small-padding fixed-width"
+      >
+        <template slot-scope="{row}">
+          <el-button
+            type="primary"
+            size="mini"
+            style="width: auto;"
+            icon="el-icon-edit-outline"
+            @click="handleUpdate(row)"
+          >
+            修改
+          </el-button>
+
+          <el-button
+            size="mini"
+            type="danger"
+            style="width: auto;"
+            icon="el-icon-delete"
+            @click="handleDelete(row._id)"
+          >
+            删除
+          </el-button>
+        </template>
+      </el-table-column>
+    </el-table>
+
+    <pagination
+      v-show="total>0"
+      :total="total"
+      :page.sync="listQuery.currentPage"
+      :limit.sync="listQuery.pageSize"
+      @pagination="getList"
+    />
+
+    <!-- 添加和修改界面 -->
+
+    <el-dialog
+      :title="textMap[dialogStatus]"
+      :visible.sync="dialogFormVisible"
+    >
+      <el-form
+        ref="dataForm"
+        :rules="rules"
+        :model="temp"
+        label-position="left"
+        label-width="90px"
+        style="width: 400px; margin-left:50px;"
+      >
+        {{#if advanced}}
+        <el-form-item
+          label="Type"
+          prop="type"
+        >
+          <el-select
+            v-model="temp.type"
+            class="filter-item"
+            placeholder="Please select"
+          >
+            <el-option
+              v-for="item in calendarTypeOptions"
+              :key="item.key"
+              :label="item.display_name"
+              :value="item.key"
+            />
+          </el-select>
+        </el-form-item>
+        {{/if}}
+        <el-form-item
+          label="权限名"
+          prop="name"
+        >
+          <el-input v-model="temp.name" />
+        </el-form-item>
+
+        <el-form-item
+          label="权限"
+          prop="access"
+        >
+          <el-input v-model="temp.access" />
+        </el-form-item>
+
+        <el-form-item label="权限" prop="access">
+          {{ temp.access }}
+        </el-form-item>
+
+        <el-form-item v-if="temp.updatedAt" label="更新时间">
+          \{{ temp.updatedAt | parseTime }}
+        </el-form-item>
+
+        <el-form-item v-if="temp.createdAt" label="创建时间">
+          \{{ temp.createdAt | parseTime }}
+        </el-form-item>
+
+      </el-form>
+      <div
+        slot="footer"
+        class="dialog-footer"
+      >
+        <el-button @click="dialogFormVisible = false">
+          取消
+        </el-button>
+        <el-button
+          type="primary"
+          @click="dialogStatus==='create'?createData():updateData()"
+        >
+          保存
+        </el-button>
+      </div>
+    </el-dialog>
+
+  </div>
+</template>
+
+<script>
+
+import {{ name }} from "@/api/{{ name }}";
+import Pagination from "@/components/Pagination"; // secondary package based on el-pagination
+import pagesizeMixin from "@/mixins/pagesize";
+import baseMixin from "@/mixins/base";
+
+{{#if advanced}}
+const calendarTypeOptions = [
+  { key: "CN", display_name: "China" },
+  { key: "US", display_name: "USA" },
+  { key: "JP", display_name: "Japan" },
+  { key: "EU", display_name: "Eurozone" }
+];
+{{/if}}
+export default {
+  name: "{{ properCase name }}",
+  components: { Pagination },
+  filters: {
+    statusFilter(status) {
+      const statusMap = {
+        true: "success",
+        false: "danger"
+      };
+      return statusMap[status];
+    }
+  },
+  mixins: [baseMixin, pagesizeMixin],
+  data() {
+    return {
+      title: '用户',
+      tableKey: 0,
+      list: null,
+      total: 0,
+      listLoading: true,
+      listQuery: {
+        // 查询关键字
+        isPaging: true,
+        currentPage: 1,
+        pageSize: 20,
+        search: undefined{{#if advanced}},{{/if}}
+        {{#if advanced}}
+        importance: undefined,
+        listType: undefined
+        {{/if}}
+      },
+      {{#if advanced}}
+      importanceOptions: [1, 2, 3],
+      calendarTypeOptions,
+      {{/if}}
+      showReviewer: false,
+      // 表单提交的数据
+      temp: {
+        id: undefined,
+        name: "",
+        access: ""
+      },
+      dialogFormVisible: false,
+      dialogStatus: "",
+      textMap: {
+        update: "修改",
+        create: "新增"
+      },
+      // 验证方法
+      rules: {
+        name: [
+          { required: true, message: "名称必须填写", trigger: "blur" }
+        ],
+        access: [
+          { required: true, message: "权限必须填写", trigger: "blur" }
+        ]
+      }
+    };
+  },
+  created() {
+    this.getList();
+  },
+  methods: {
+    getList() {
+      this.listLoading = true;
+      {{ name }}.list(this.listQuery).then(response => {
+        this.list = response.data.data && response.data.data.list;
+        this.total = response.data.data ? response.data.data.count : 0;
+
+        this.listLoading = false;
+      });
+    },
+    handleFilter() {
+      this.listQuery.currentPage = 1;
+      this.getList();
+    },
+
+    resetTemp() {
+      this.temp = {
+        id: undefined,
+        name: "",
+        access: ""
+      };
+    },
+    // 弹起添加界面
+    handleCreate() {
+      {{ name }}.newly().then(response => {
+        this.resetTemp();
+      });
+      this.dialogStatus = "create";
+      this.dialogFormVisible = true;
+      this.$nextTick(() => {
+        this.$refs["dataForm"].clearValidate();
+      });
+    },
+    // 添加方法
+    createData() {
+      this.$refs["dataForm"].validate(valid => {
+        if (valid) {
+          {{ name }}.create(this.temp).then(res => {
+            if (this.errorInfo(res)) return;
+            this.list.unshift(res.data.data);
+            this.dialogFormVisible = false;
+            this.successInfo();
+          });
+        }
+      });
+    },
+    handleUpdate(row) {
+      this.temp = Object.assign({}, row); // copy obj
+
+      this.dialogStatus = "update";
+      this.dialogFormVisible = true;
+      this.$nextTick(() => {
+        this.$refs["dataForm"].clearValidate();
+      });
+    },
+    updateData() {
+      this.$refs["dataForm"].validate(valid => {
+        if (valid) {
+          const tempData = Object.assign({}, this.temp);
+
+          {{ name }}.update(tempData._id, tempData).then(res => {
+            if (this.errorInfo(res)) return;
+            for (const v of this.list) {
+              if (v._id === tempData._id) {
+                this.list.splice(this.list.indexOf(v), 1, tempData);
+                break;
+              }
+            }
+            this.dialogFormVisible = false;
+            this.successInfo();
+          });
+        }
+      });
+    },
+    handleDelete(id) {
+      this.$confirm("是否删除？", "提示", {
+        confirmButtonText: "确定",
+        cancelButtonText: "取消",
+        type: "warning"
+      })
+        .then(() => {
+          {{ name }}.remove(id).then(res => {
+            if (this.errorInfo(res)) return;
+            for (const v of this.list) {
+              if (v._id === id) {
+                this.list.splice(this.list.indexOf(v), 1);
+                break;
+              }
+            }
+            this.dialogFormVisible = false;
+            this.successInfo();
+          });
+        })
+    },
+    handlePass(row) {
+      this.$confirm(
+        row.pass ? "你确定要关闭吗？" : "你确定要开启吗？",
+        "提示",
+        {
+          confirmButtonText: "确定",
+          cancelButtonText: "取消",
+          type: "warning"
+        }
+      ).then(() => {
+        {{ name }}.pass(row._id).then(res => {
+          if (this.errorInfo(res)) return;
+          this.successInfo();
+          const idx = this.list.findIndex(e => e._id === row._id);
+          const obj = this.list[idx];
+          obj.pass = !!!obj.pass;
+          this.list.splice(idx, 1, obj);
+        });
+      });
+    },
+  }
+};
+</script>
+
+<style lang="scss" scoped>
+
+</style>

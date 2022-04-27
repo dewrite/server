@@ -1,0 +1,14 @@
+version: '3.7'
+
+services:
+  erp-app:
+    image: puxin/erp:0.0.2
+    build: ./
+    networks:
+      - mongo
+    ports:
+      - 8082:7001
+
+networks:
+  mongo:
+    external: true
