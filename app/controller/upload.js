@@ -5,6 +5,7 @@ const awaitWriteStream = require('await-stream-ready').write
 const sendToWormhole = require('stream-wormhole')
 const download = require('image-downloader')
 const Minio = require('minio')
+require('dotenv').config()
 
 class UploadController extends Controller {
   constructor(ctx) {
@@ -20,8 +21,14 @@ class UploadController extends Controller {
       const extname = path.extname(stream.filename).toLowerCase()
       // const bucket = ctx.helper.formatTime(new Date(), 'YYYYMMDD') + ctx.helper.randomNum()
       const bucket = ctx.helper.formatTime(new Date(), 'YYYYMMDD')
-
-      const minioClient = new Minio.Client(app.config.image.s3)
+      const opts = Object.assign(
+        {
+          accessKey: process.env.accessKey,
+          secretKey: process.env.secretKey,
+        },
+        app.config.image.s3
+      )
+      const minioClient = new Minio.Client(opts)
       const policy = `
 {
   "Version": "2012-10-17",

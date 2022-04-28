@@ -33,7 +33,8 @@ module.exports = (appInfo) => {
     credentials: true,
     origin: (ctx) => ctx.get('origin'),
   }
-  ;(config.multipart = {
+  
+  config.multipart = {
     fileExtensions: [
       '.apk',
       '.pptx',
@@ -46,10 +47,11 @@ module.exports = (appInfo) => {
       '.wav',
       '.mov',
     ], // 增加对 .apk 扩展名的支持
-  }),
-    (config.bcrypt = {
-      saltRounds: 10, // default 10
-    })
+  }
+
+  config.bcrypt = {
+    saltRounds: 10, // default 10
+  }
 
   config.mongoose = {
     url: 'mongodb://localhost:27017/dewrite',
@@ -83,7 +85,7 @@ module.exports = (appInfo) => {
 
   config.theme = {
     template: '/Users/stephen/Projects/donews/vuepress-starter',
-    site: '/Users/stephen/Projects/donews/subdomain'
+    site: '/Users/stephen/Projects/donews/subdomain',
   }
 
   config.session = {

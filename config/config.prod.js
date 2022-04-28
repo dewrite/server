@@ -14,7 +14,7 @@ module.exports = appInfo => {
   }
 
   config.mongoose = {
-    url: 'mongodb://mongo1,mongo2,mongo3/egg?replicaSet=rs0',
+    url: 'mongodb://localhost:27017/dewrite',
     options: {
       // useMongoClient: true,
       readPreference: 'secondaryPreferred',
@@ -34,13 +34,19 @@ module.exports = appInfo => {
     match: /^\/api\/((?!public).)*$/
   }
 
-
   config.image = {
-    server: 'http://api.pocplus.com'
+    server: 'http://img.dewrite.io',
+    s3: {
+      endPoint: '127.0.0.1',
+      port: 9000,
+      useSSL: false,
+      
+    },
   }
 
   config.theme = {
-    root: '/Users/stephen/Projects/donews/vuepress-starter',
+    template: '/www/wwwroot/template',
+    site: '/www/wwwroot/subdomain'
   }
   
   return config
