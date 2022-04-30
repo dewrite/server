@@ -3,9 +3,9 @@ module.exports = (app) => {
 
   const FunderSchema = new mongoose.Schema(
     {
-      level: { type: String, required: true },
-      amount: { type: Number, required: true },
-      shares: { type: Number, required: true },
+      level: { type: String, required: true }, // 等级 cornerstone 基石\core 核心\angel 天使\
+      amount: { type: Number, required: true },  // 金额
+      shares: { type: Number, required: true },  // 股份
       blockchain: { type: String },
       tx: { type: String }, // 交易地址
       user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },

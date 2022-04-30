@@ -3,7 +3,7 @@ const fs = require('fs')
 const fse = require('fs-extra')
 const { spawn } = require('child_process')
 class UserService extends Service {
-
+  // 部署个人网站
   async deploy(user, overwrite) {
     const { app } = this
 
@@ -11,10 +11,15 @@ class UserService extends Service {
     const site = '/dist/' + user._id
 
     const server = app.config.theme.site
-    const uri = '/public/_sub/' + user._id
+    const uri = '/public/_sub/' + user.address
 
     console.log(root + site, server + uri)
     fse.copySync(root + site, server + uri, { overwrite: true })
+    if (user.domain) {
+      const domain = server + '/public/_sub/' + user.domain
+      if (fs.existsSync(domain)) fs.unlinkSync(domain)
+      fs.symlinkSync(server + uri, domain, 'dir')
+    }
   }
 
   async generateConfig(user) {

@@ -92,8 +92,9 @@ class UserController extends Controller {
     if (!user) {
       ctx.throw(404, '用户不存在')
     }
-    
+    // 生成首页的文件
     await service.user.generateReadme(user)
+    // 更新配置文件
     await service.user.generateConfig(user)
 
     ctx.helper.success({ ctx, res: 'ok' })
@@ -152,6 +153,12 @@ class UserController extends Controller {
     const { id } = ctx.params
     const payload = ctx.request.body || {}
     // 调用 Service 进行业务处理
+    if (payload.domain) {
+      const dev = await ctx.model.User.findOne({domain: payload.domain , _id: { $ne: id }})
+      if (dev) {
+        ctx.throw(400, '子域名已存在')
+      }
+    }
     const res = await service.user.update(id, payload)
     // 设置响应内容和响应状态码
     ctx.helper.success({ ctx, res })

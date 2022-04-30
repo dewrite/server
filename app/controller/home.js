@@ -5,7 +5,7 @@ class HomeController extends Controller {
   async index() {
     const packageJson = require(path.resolve(this.config.baseDir, 'package.json'))
     this.ctx.body = {
-      name: 'tempateTitle',
+      name: 'api.dewrite.io',
       auther: `${packageJson.author}`,
       version: `${packageJson.version}`,
       node_env: process.env.NODE_ENV,

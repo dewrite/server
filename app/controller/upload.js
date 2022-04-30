@@ -5,6 +5,7 @@ const awaitWriteStream = require('await-stream-ready').write
 const sendToWormhole = require('stream-wormhole')
 const download = require('image-downloader')
 const Minio = require('minio')
+const s3policy = require('./s3policy')
 require('dotenv').config()
 
 class UploadController extends Controller {
@@ -12,85 +13,111 @@ class UploadController extends Controller {
     super(ctx)
   }
 
+  async uploads3(stream) {
+    const { ctx, app } = this
+    const filename = path.basename(stream.filename)
+    const extname = path.extname(stream.filename).toLowerCase()
+    const bucket = ctx.helper.formatTime(new Date(), 'YYYYMMDD')
+    const opts = Object.assign(
+      {
+        accessKey: process.env.accessKey,
+        secretKey: process.env.secretKey,
+      },
+      app.config.image.s3
+    )
+    const minioClient = new Minio.Client(opts)
+
+    try {
+      const res = await minioClient.bucketExists(bucket)
+      if (!res) {
+        await minioClient.makeBucket(bucket)
+        await minioClient.setBucketPolicy(bucket, s3policy(bucket))
+      }
+    } catch (errin) {
+      console.log(errin)
+    }
+
+    const objectname =
+      ctx.helper.md5(
+        filename + ctx.helper.formatTime(new Date(), 'HHmmss') + ctx.helper.randomNum()
+      ) + extname
+    await minioClient.putObject(bucket, objectname, stream)
+
+    const url = `${app.config.image.server}/${bucket}/${objectname}`
+    return url
+  }
+
+  async removes3() {
+    const { ctx, app } = this
+    // const post = ctx.request.body || {} // POST
+    const get = ctx.query // GET
+    let { file } = get
+
+    if (file) {
+      try {
+        file = file.replace(app.config.image.server, '')
+        const regex = /\/(\d+?)\/(.+)/
+        const match = file.match(regex)
+        const mybucket = match[1]
+        const myobject = match[2]
+        const opts = Object.assign(
+          {
+            accessKey: process.env.accessKey,
+            secretKey: process.env.secretKey,
+          },
+          app.config.image.s3
+        )
+        const minioClient = new Minio.Client(opts)
+        await minioClient.removeObject(mybucket, myobject)
+        // console.log('removeObject', mybucket, myobject)
+        ctx.helper.success({ ctx, res: 'ok' })
+      } catch (error) {
+        ctx.throw(404, '没有找到文件')
+      }
+    } else {
+      ctx.throw(404, '没有找到文件')
+    }
+  }
   // 上传单个文件
   async s3() {
-    const { ctx, app } = this
+    const { ctx } = this
     const stream = await ctx.getFileStream()
     try {
-      const filename = path.basename(stream.filename)
-      const extname = path.extname(stream.filename).toLowerCase()
-      // const bucket = ctx.helper.formatTime(new Date(), 'YYYYMMDD') + ctx.helper.randomNum()
-      const bucket = ctx.helper.formatTime(new Date(), 'YYYYMMDD')
-      const opts = Object.assign(
-        {
-          accessKey: process.env.accessKey,
-          secretKey: process.env.secretKey,
-        },
-        app.config.image.s3
-      )
-      const minioClient = new Minio.Client(opts)
-      const policy = `
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": [
-        "s3:GetBucketLocation",
-        "s3:ListBucket"
-      ],
-      "Effect": "Allow",
-      "Principal": {
-        "AWS": [
-          "*"
-        ]
-      },
-      "Resource": [
-        "arn:aws:s3:::${bucket}"
-      ],
-      "Sid": ""
-    },
-    {
-      "Action": [
-        "s3:GetObject"
-      ],
-      "Effect": "Allow",
-      "Principal": {
-        "AWS": [
-          "*"
-        ]
-      },
-      "Resource": [
-        "arn:aws:s3:::${bucket}/*"
-      ],
-      "Sid": ""
-    }
-  ]
-}
-`
-
-      try {
-        const res = await minioClient.bucketExists(bucket)
-        if (!res) {
-          await minioClient.makeBucket(bucket)
-          await minioClient.setBucketPolicy(bucket, policy)
-        }
-      } catch (errin) {
-        console.log(errin)
-      }
-
-      const objectname =
-        ctx.helper.md5(
-          filename + ctx.helper.formatTime(new Date(), 'HHmmss') + ctx.helper.randomNum()
-        ) + extname
-      await minioClient.putObject(bucket, objectname, stream)
-
-      const url = `${app.config.image.server}/${bucket}/${objectname}`
+      const url = await this.uploads3(stream)
       ctx.helper.success({ ctx, res: { url } })
       return
     } catch (err) {
       await sendToWormhole(stream)
       throw err
     }
+  }
+
+  // 上传多个文件
+  async s3m() {
+    const { ctx } = this
+    const parts = ctx.multipart()
+    const files = []
+
+    let part
+    while ((part = await parts()) != null) {
+      if (part.length) {
+        console.log('field: ' + part[0])
+      } else {
+        if (!part.filename) {
+          continue
+        }
+        try {
+          const field = part.fieldname
+          const url = await this.uploads3(part)
+          files.push([field, url])
+        } catch (err) {
+          // 必须将上传的文件流消费掉，要不然浏览器响应会卡死
+          await sendToWormhole(part)
+          throw err
+        }
+      }
+    }
+    ctx.helper.success({ ctx, res: { files } })
   }
 
   // 上传单个文件

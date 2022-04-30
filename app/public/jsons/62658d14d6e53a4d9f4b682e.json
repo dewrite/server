@@ -1,0 +1,16 @@
+{
+  "name": "参考文档",
+  "id": "62658d14d6e53a4d9f4b682e",
+  "external_url": "http://undefined.app.com:3000/posts/62658d14d6e53a4d9f4b682e.html",
+  "attributes": [
+    {
+      "trait_type": "Author"
+    },
+    {
+      "display_type": "date",
+      "trait_type": "Discovered",
+      "value": 1652114857874
+    }
+  ],
+  "image": "https://gateway.pinata.cloud/ipfs/QmPERUgDiFz8DfYokQp36entM748BHb2sShQc2GF7svzb3"
+}

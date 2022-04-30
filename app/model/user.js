@@ -8,11 +8,12 @@ module.exports = app => {
     title: { type: String }, // blog 标题
     desc: { type: String }, // blog一句话介绍
     cover: { type: String }, // 
+    domain: { type: String ,unique: true }, //
 
     build: { type: Date }, // 最后一次打包时间
 
     role: { type: mongoose.Schema.Types.ObjectId, ref: 'Role' },
-    avatar: { type: String, default: 'https://1.gravatar.com/avatar/a3e54af3cb6e157e496ae430aed4f4a3?s=96&d=mm'},
+    avatar: { type: String, default: '/avatar.jpg'},
     extra: { type: mongoose.Schema.Types.Mixed },
 
   }, { timestamps: true })

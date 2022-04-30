@@ -13,3 +13,4 @@ run/
 #.vscode/
 app/public/uploads/
 .env
+deploy.sh

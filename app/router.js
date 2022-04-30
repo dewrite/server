@@ -13,6 +13,8 @@ module.exports = app => {
 
 
   router.get('/api/articles/build/:id', controller.articles.build)  
+  router.get('/api/articles/ipfs/:id', controller.articles.ipfs)  
+  router.get('/api/articles/eth/owner/:id', controller.articles.ethSetOwner)  
   router.get('/api/site/init/:id', controller.user.init)   
   router.get('/api/site/update/:id', controller.user.updated)   
   router.get('/api/site/publish/:id', controller.user.publish)   
@@ -81,6 +83,8 @@ module.exports = app => {
 
   // upload
   router.post('/api/public/upload/s3', controller.upload.s3)
+  router.delete('/api/public/s3', controller.upload.removes3)
+  router.post('/api/public/upload/s3m', controller.upload.s3m)
   // router.post('/api/public/upload', controller.upload.create)
   // router.post('/api/upload/url', controller.upload.url)
   // router.post('/api/uploads', controller.upload.multiple)
