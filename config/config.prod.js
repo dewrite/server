@@ -40,15 +40,13 @@ module.exports = appInfo => {
       endPoint: '127.0.0.1',
       port: 9000,
       useSSL: false,
-      
     },
   }
 
   config.theme = {
     template: '/www/wwwroot/template',
     site: '/www/wwwroot/subdomain',
-    url: 'https://subdomain.dewrite.io/posts/aid.html',
-
+    url: 'http://subdomain.dewrite.io/posts/aid.html',
   }
 
   config.eth = {
